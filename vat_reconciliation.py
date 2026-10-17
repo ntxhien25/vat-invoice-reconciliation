@@ -421,7 +421,7 @@ def matching_overview(reconciliation, gdt, misa):
 
 
 STATUS_PALETTES = {
-    'modern': dict(zip(STATUS_LABELS.values(), ['#50A2A7', '#9F838C', '#471323', '#334E58', '#EBEBD3'])),
+    'modern': dict(zip(STATUS_LABELS.values(), ['#326B77', '#D9822B', '#6D3507', '#1E293B', '#CBD5E1'])),
     'current': dict(zip(STATUS_LABELS.values(), ['#237C73', '#D99332', '#527DA8', '#B85E65', '#A6ABB2'])),
     'clear': dict(zip(STATUS_LABELS.values(), ['#4477AA', '#E69F00', '#7B4AB5', '#CC3311', '#999999'])),
     'soft': dict(zip(STATUS_LABELS.values(), ['#287D78', '#BE8D35', '#8064A2', '#B85E65', '#939BA5'])),
@@ -432,14 +432,16 @@ def plot_comparison(overview, month, matching=False, palette="modern"):
     """Matplotlib source-level counts; review records are not labelled tax errors."""
     import matplotlib.pyplot as plt
     import numpy as np
+    from matplotlib.colors import to_rgb
     columns = ['Matched Invoices', 'Amount Differences / Missing Values', 'Unmatched / Duplicate-Key Records'] if matching else list(STATUS_LABELS.values())
     if palette not in STATUS_PALETTES:raise ValueError(f'Unknown invoice-status palette: {palette}')
     colors = ['#237C73', '#D99332', '#527DA8'] if matching else [STATUS_PALETTES[palette][column] for column in columns]
-    opacity = .88 if palette == 'modern' else 1
+    opacity = .95 if palette == 'modern' else 1
     if matching and palette == 'modern':
-        colors = ['#D9AAAD', '#B96D75', '#884A55']
-    fig, axes = plt.subplots(1, 2, figsize=(11.5, 5.4))
+        colors = ['#A0AEC0', '#EA580C', '#991B1B']
+    fig, axes = plt.subplots(1, 2, figsize=(11.5, 5.0), facecolor='#FFFFFF')
     for axis, name in zip(axes, ['Input VAT Invoices', 'Output VAT Invoices']):
+        axis.set_facecolor('#FFFFFF')
         data = overview.loc[overview['Invoice Type'].eq(name)].set_index('Source').reindex(['GDT', 'MISA'])
         bottom = np.zeros(2)
         maximum = max(float(data[columns].sum(axis=1).max()), 1)
@@ -447,49 +449,52 @@ def plot_comparison(overview, month, matching=False, palette="modern"):
         for column, color in zip(columns, colors):
             values = data[column].to_numpy(dtype=float)
             legend_label = 'Matching Amounts' if matching and column == 'Matched Invoices' else column
+            if matching and column == 'Amount Differences / Missing Values':legend_label='Amount Diff / Missing Values'
             bars = axis.bar(['GDT', 'MISA'], values, bottom=bottom, label=legend_label, color=color, alpha=opacity, edgecolor='none', width=.55)
-            from matplotlib.colors import to_rgb
             r, g, b = to_rgb(color)
-            r, g, b = (opacity * value + (1 - opacity) for value in (r, g, b))
-            label_background = '#334E58' if .2126*r + .7152*g + .0722*b > .82 else 'white'
+            lum = 0.2126*r + 0.7152*g + 0.0722*b
+            inner_text_c = '#0F172A' if lum > 0.65 else '#FFFFFF'
             for x, (bar, value) in enumerate(zip(bars, values)):
                 if not value:continue
                 center = bar.get_y() + bar.get_height() / 2
                 if value < maximum * .04:
-                    short = {'Amount Differences / Missing Values': 'Amount Review', 'Unmatched / Duplicate-Key Records': 'Unmatched', 'Matched Invoices': 'Matched'}.get(column, column.replace(' Invoices', ''))
-                    label_color = 'black' if column == 'Other' else color
+                    short = {'Amount Differences / Missing Values': 'Amount Diff', 'Unmatched / Duplicate-Key Records': 'Unmatched', 'Matched Invoices': 'Matched'}.get(column, column.replace(' Invoices', ''))
+                    label_color = '#64748B' if column in ['Other', 'Matched Invoices'] or color in ['#CBD5E1', '#A0AEC0'] else ('#A05206' if color == '#D9822B' else color)
                     small_segments.append((x, center, f'{short}: {int(value)}', color, label_color))
                 else:
-                    axis.text(x, center, str(int(value)), ha='center', va='center', fontsize=9,
-                              color='black' if column == 'Other' else color, alpha=1,
-                              bbox=None if column == 'Other' else {'facecolor': label_background, 'edgecolor': 'none', 'pad': 1.5})
+                    axis.text(x, center, str(int(value)), ha='center', va='center', fontsize=9.5,
+                              color=inner_text_c, fontweight='bold',
+                              bbox={'facecolor': color, 'alpha': 0.15, 'edgecolor': 'none', 'pad': 2, 'boxstyle': 'round,pad=0.25'})
             bottom += values
         for x, total in enumerate(bottom):
-            axis.text(x, total + max(bottom.max() * .025, .3), f'Total: {int(total)}', ha='center', fontsize=10)
+            axis.text(x, total + max(bottom.max() * .028, .4), f'Total: {int(total)}', ha='center', fontsize=10, fontweight='bold', color='#0F172A',zorder=6,bbox={'facecolor':'white','edgecolor':'none','pad':.8})
         slots = {0: 0, 1: 0}
         for x, center, label, color, label_color in small_segments:
             level = slots[x];slots[x] += 1
-            axis.annotate(label, xy=(x + .26, center), xytext=(x + .45, maximum * (1.13 + .11 * level)),
-                          ha='left', fontsize=8, color=label_color, alpha=1, fontweight='normal',
-                          arrowprops={'arrowstyle': '-', 'color': color, 'linewidth': 1, 'relpos': (0, 0)},
-                          bbox={'facecolor': 'white', 'edgecolor': 'none', 'pad': 1})
+            callout_x = 0.28 if x == 0 else 1.52
+            axis.annotate(label, xy=(x + .26, center), xytext=(callout_x, maximum * (1.13 + .11 * level)),
+                          ha='left', fontsize=8.5, color=label_color, fontweight='bold',
+                          zorder=4,arrowprops={'arrowstyle': '-', 'color': color, 'linewidth': 1.1, 'relpos': (0, 0),'shrinkA':3,'shrinkB':2},
+                          bbox={'facecolor': '#FFFFFF', 'edgecolor': color, 'pad': 2.2, 'boxstyle': 'round,pad=0.25', 'linewidth': 1.0})
         if small_segments:
-            axis.set_xlim(-.5, 2.3)  # Keep labels to the right of the final bar visible.
+            axis.set_xlim(-.5, 2.55)
         headroom = max(1.22, 1.25 + .11 * (max(slots.values()) - 1)) if small_segments else 1.22
         axis.set_ylim(0, max(maximum * headroom, 1))
-        axis.set_title(name, fontsize=12)
-        axis.set_ylabel('Source Records')
+        axis.set_title(name, fontsize=12, fontweight='bold', color='#0F172A', pad=12)
+        axis.set_ylabel('Source Records', fontsize=10, color='#475569')
         axis.spines[['top', 'right']].set_visible(False)
+        axis.spines[['left', 'bottom']].set_color('#CBD5E1')
+        axis.tick_params(colors='#475569', labelsize=9.5)
         axis.yaxis.set_major_locator(plt.MaxNLocator(integer=True))
     handles, labels = axes[0].get_legend_handles_labels()
-    legend = fig.legend(handles, labels, loc='upper center', bbox_to_anchor=(.5, .92), ncol=2 if matching else 3, frameon=False, fontsize=9)
+    legend = fig.legend(handles, labels, loc='upper center', bbox_to_anchor=(.5, .93), ncol=2 if matching else 3, frameon=False, fontsize=9.5)
     for label, color in zip(legend.get_texts(), colors):
-        label.set_color(color)
-        label.set_alpha(1)
-        if color.upper() == '#EBEBD3':
-            label.set_color('black')
-    fig.suptitle(f'{month} | ' + ('Invoice Reconciliation Results' if matching else 'Invoice Records by Source and Status'), fontsize=14, y=.99)
-    fig.text(.5, .015, 'Matching key: invoice number, issue date and seller’s/purchaser’s tax code. Each matched pair is counted once per source.' if matching else 'Status counts include related original invoices; customs declarations remain separately identified.', ha='center', fontsize=9, color='#555555')
+        legend_color = '#64748B' if color.upper() in ['#CBD5E1', '#EBEBD3', '#A0AEC0'] else ('#A05206' if color == '#D9822B' else color)
+        label.set_color(legend_color)
+        label.set_fontweight('bold')
+    title_text = f'{month} | ' + ('Invoice Reconciliation Results' if matching else 'Invoice Records by Source and Status')
+    fig.suptitle(title_text, fontsize=13.5, fontweight='bold', color='#0F172A', y=.99)
+    fig.text(.5, .015, 'Matching key: invoice number, issue date and seller’s/purchaser’s tax code. Each matched pair is counted once per source.' if matching else 'Status counts include related original invoices; customs declarations remain separately identified.', ha='center', fontsize=8.5, color='#475569')
     fig.subplots_adjust(top=.72, bottom=.15, wspace=.28)
     # Round the outer stack, keeping internal status boundaries flat. The radius
     # is 10% of bar width; convert the vertical radius to preserve circular corners.
