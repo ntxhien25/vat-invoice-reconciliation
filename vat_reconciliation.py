@@ -604,6 +604,9 @@ def export_reconciliation_workbook(result, path, source_layouts=True):
         for offset, record in enumerate(frame.itertuples(index=False, name=None), start + 1):
             for column, (header, value) in enumerate(zip(frame.columns, record), 1):
                 if pd.isna(value):continue
+                # Public provenance needs a filename and row, never a workstation path.
+                if 'File Path' in header and isinstance(value, str):
+                    value = Path(value).name
                 cell = sheet.cell(offset, column, value)
                 is_id = any(term in header for term in ('Tax ID', 'Tax Code', 'Invoice Number', 'Invoice Series', 'MST', 'Mã số thuế', 'Số hóa đơn', 'Ký hiệu hóa đơn'))
                 is_amount = any(term in header for term in ('Amount', 'Payment', 'Difference', 'Tổng tiền', 'Giá trị HHDV', 'Doanh thu', 'Thuế GTGT'))
@@ -641,7 +644,7 @@ def export_reconciliation_workbook(result, path, source_layouts=True):
                 line += 1
                 for source in block['sources']:
                     sheet.cell(line, 1, source['source']).font = Font(bold=True)
-                    sheet.cell(line + 1, 1, f'{source["file"]} | Sheet: {source["sheet"]} | Source Row: {source["row"]}').data_type = 's'
+                    sheet.cell(line + 1, 1, f'{Path(source["file"]).name} | Sheet: {source["sheet"]} | Source Row: {source["row"]}').data_type = 's'
                     line = write_table(sheet, source['table'], line + 2) + 1
                 def amount(value):return 'Unavailable' if pd.isna(value) else f'{value:,.0f}'
                 sheet.cell(line, 1, f'Difference (MISA - GDT): Net Amount {amount(block["net_difference"])}; Invoice Total {amount(block["total_difference"])}; VAT {amount(block["vat_difference"])}')

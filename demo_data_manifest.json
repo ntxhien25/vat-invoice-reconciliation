@@ -1,27 +1,7 @@
 {
-  "kind": "simulated_workload",
-  "multiplier": 6.5,
-  "basis": "Expanded de-identified sample with distinct invoice identifiers and selected corresponding records. Invoice schedule subtotals are recomputed. Other return and annex sheets retain template layouts without monetary values.",
-  "gdt": {
-    "purchases": 839,
-    "sales": 189
-  },
-  "misa": {
-    "purchases": 774,
-    "sales": 182
-  },
-  "customs_declarations": 20,
-  "results": {
-    "purchases": {
-      "matched_amounts_agree": 715,
-      "gdt_only": 91,
-      "commercial_invoice_requires_review": 33,
-      "missing_matching_fields": 20,
-      "misa_only": 6
-    },
-    "sales": {
-      "matched_amounts_agree": 182,
-      "gdt_only": 7
-    }
-  }
+  "classification": "Fictional records calibrated to earlier public aggregate presentation",
+  "period": "2025-04",
+  "retained": "Invoice counts and reconciliation breakdowns",
+  "replaced": "Invoice-level details, amounts, identifiers and dates",
+  "no_lookup_links": true
 }

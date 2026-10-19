@@ -1,13 +1,15 @@
-"""Run the working reconciliation against the five masked Excel files."""
+"""Run reconciliation against five fictional files calibrated to retained aggregate counts."""
 from pathlib import Path
 import json
 import matplotlib.pyplot as plt
 import vat_reconciliation as vr
+from privacy_check import check_release
 ROOT = Path(__file__).resolve().parent
-MONTH = '2026-08'
+MONTH = '2025-04'
 
 def run_demo(root=ROOT):
     root = Path(root).resolve()
+    check_release(root)
     tax_code = json.loads((root/'demo_config.json').read_text())['tax_code']
     gdt, diagnostics = vr.load_gdt_folder(root, MONTH, tax_code)
     if not diagnostics.status.eq('loaded').all():raise ValueError('All four GDT source files are required.')
@@ -21,6 +23,7 @@ def run_demo(root=ROOT):
     summary = vr.matching_overview(results,gdt,misa)
     vr.save_chart(vr.plot_comparison(summary,MONTH,matching=True),root/'assets/reconciliation-overview.png')
     plt.close('all')
+    check_release(root)
     return {'gdt':gdt,'misa':misa},results,summary
 
 if __name__ == '__main__':
