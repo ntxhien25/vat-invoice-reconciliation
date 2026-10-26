@@ -8,3 +8,10 @@ __pycache__/
 *.partial.xlsx
 *.pending.xlsx
 private/
+
+# Local live exports and generated review artifacts
+exports/
+generated-reports/
+.venv/
+__pycache__/
+*.dpapi
