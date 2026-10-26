@@ -4,7 +4,7 @@ From collecting e-invoices to a focused review of missing records and difference
 
 ## The situation / Before the workflow
 
-The group’s workload covered approximately **1,000 input invoices and 400 output invoices per month across two companies**. **The automation was applied to one company in the group.** The accountant relied on meInvoice’s advertised synchronisation with GDT and assumed the monthly invoice lists were complete.
+The group’s workload covered approximately **1,000 input invoices and 400 output invoices per month across two companies**. **The automation was applied to both companies in the group.** The accountant relied on meInvoice’s advertised synchronisation with GDT and assumed the monthly invoice lists were complete.
 
 1. **Check collected e-invoices:** compare documents submitted by staff with the invoices shown in meInvoice and follow up apparent gaps.
 2. **Check printed invoices against accounting:** print the e-invoices collected in round one; check for missing invoices and differences in amounts, VAT and other information before preparing the VAT return.
@@ -32,7 +32,7 @@ The invoice printing/checking activity fell from approximately **two hours to 15
 
 ## Visual overview
 
-The group-wide volumes are distinct from the single-company scope of this case study and its fictional demonstration data.
+The workflow was applied to both group companies. The public demonstration uses fictional records for one company, calibrated to retained aggregate counts; it is not the combined group dataset.
 
 ![Invoice records by source and status](assets/invoice-status-comparison.png)
 
